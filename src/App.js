@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import Select from "react-select";
+import {
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  CircularProgress,
+  Button,
+  TextField,
+} from "@mui/material";
 import "./App.css";
 
 const App = () => {
@@ -11,7 +19,6 @@ const App = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Fetch the list of models
     axios
       .get("http://localhost:8080/v1/api/chat/models")
       .then((response) => {
@@ -26,78 +33,125 @@ const App = () => {
       });
   }, []);
 
+  async function chatCompletion(payload) {
+    const response = await fetch(
+      "http://localhost:8080/v1/api/chat/completion",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (!response.body) {
+      throw new Error("ReadableStream not supported or no response body");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let done = false;
+    let ongoingContent = "";
+
+    const userMessage = {
+      role: "user",
+      content: payload.messages[payload.messages.length - 1].content,
+    };
+    setMessages((prevMessages) => [...prevMessages, userMessage]);
+
+    while (!done) {
+      const { value, done: doneReading } = await reader.read();
+      done = doneReading;
+      const chunk = decoder.decode(value, { stream: true });
+      const chatResponse = JSON.parse(chunk.slice(5));
+
+      ongoingContent += chatResponse.choices[0].delta.content;
+
+      setMessages((prevMessages) => [
+        ...prevMessages.slice(0, -1),
+        { role: "assistant", content: ongoingContent },
+      ]);
+    }
+  }
+
   const handleSend = () => {
     if (!input.trim() || !selectedModel) return;
 
     const userMessage = { role: "user", content: input };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInput("");
-
     setLoading(true);
 
-    // Construct the payload
     const payload = {
       model: selectedModel.value,
       messages: [
         { role: "system", content: "Always answer in rhymes." },
-        ...messages, // Include previous messages in the conversation
-        userMessage, // Add the latest user message
+        ...messages,
+        userMessage,
       ],
       temperature: 0.7,
       max_tokens: -1,
       stream: true,
     };
 
-    axios
-      .post("http://localhost:8080/v1/api/chat/completion", payload)
-      .then((response) => {
-        const assistantMessage = {
-          role: "assistant",
-          content: response.data.choices[0].message.content,
-        };
-        setMessages((prevMessages) => [...prevMessages, assistantMessage]);
-      })
-      .catch((error) => {
-        console.error("Error sending message:", error);
-      })
+    chatCompletion(payload)
+      .catch((error) => console.error(error))
       .finally(() => setLoading(false));
   };
 
   return (
     <div className="chat-container">
-      <div className="header">
-        <h1>Chat Interface</h1>
-        <Select
-          options={models}
-          onChange={setSelectedModel}
-          placeholder="Select a Model"
-          className="model-dropdown"
-        />
-      </div>
       <div className="chat-box">
-        {messages.map((message, index) => (
+        {messages.map((msg, index) => (
           <div
             key={index}
             className={`message ${
-              message.role === "user" ? "user" : "assistant"
+              msg.role === "user" ? "user-message" : "assistant-message"
             }`}
           >
-            <p>{message.content}</p>
+            <div className="message-content">{msg.content}</div>
           </div>
         ))}
-        {loading && <div className="loading">Typing...</div>}
+        {loading && (
+          <div className="loading">
+            <CircularProgress color="inherit" size={24} /> Assistant is
+            typing...
+          </div>
+        )}
       </div>
-      <div className="input-box">
-        <input
-          type="text"
+
+      <div className="input-area">
+        <FormControl variant="filled" className="select-model">
+          <InputLabel>Model</InputLabel>
+          <Select
+            value={selectedModel}
+            onChange={(e) => setSelectedModel(e.target.value)}
+            label="Model"
+          >
+            {models.map((model) => (
+              <MenuItem key={model.value} value={model}>
+                {model.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <TextField
+          label="Type a message"
+          variant="filled"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message..."
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          className="message-input"
         />
-        <button onClick={handleSend} disabled={loading || !selectedModel}>
+
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSend}
+          disabled={loading}
+          className="send-button"
+        >
           Send
-        </button>
+        </Button>
       </div>
     </div>
   );
