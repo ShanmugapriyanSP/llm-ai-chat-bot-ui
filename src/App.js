@@ -80,9 +80,20 @@ const App = () => {
 
   const messagesEndRef = useRef(null); // Reference to scroll to the bottom
 
+  // Function to get the JWT token from localStorage (or another storage method)
+  const getToken = () => {
+    return localStorage.getItem("token"); // Assuming token is stored in localStorage
+  };
+
   useEffect(() => {
+    const token = getToken(); // Retrieve the token
+
     axios
-      .get("http://localhost:8080/v1/api/chat/models")
+      .get("http://localhost:8080/v1/api/chat/models", {
+        headers: {
+          Authorization: `Bearer ${token}`, // Add the Bearer token to the Authorization header
+        },
+      })
       .then((response) => {
         const modelsData = response?.data?.data || [];
         const modelOptions = modelsData.map((model) => ({
@@ -103,11 +114,16 @@ const App = () => {
   }, [messages]);
 
   async function chatCompletion(payload) {
+    const token = getToken(); // Retrieve the token
+
     const response = await fetch(
       "http://localhost:8080/v1/api/chat/completion",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Pass the Bearer token in the Authorization header
+        },
         body: JSON.stringify(payload),
       }
     );
@@ -162,7 +178,7 @@ const App = () => {
         userMessage,
       ],
       temperature: 0.7,
-      max_tokens: -1,
+      maxTokens: -1,
       stream: true,
     };
 
@@ -257,28 +273,35 @@ const App = () => {
                 </Typography>
               </Stack>
             )}
-            <div ref={messagesEndRef} /> {/* Scroll to the bottom */}
+            <div ref={messagesEndRef} />
           </Stack>
-          <TextField
-            label="Type a message"
-            variant="filled"
-            fullWidth
-            multiline
-            maxRows={4}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            sx={{
-              borderRadius: "20px",
-              marginTop: "auto",
-              backgroundColor: "#1e1e1e",
-              "& .MuiFilledInput-root": {
-                backgroundColor: "#1e1e1e",
-              },
-              maxWidth: "60%", // Reduced input box width to 60%
-              margin: "0 auto", // Centering the input box
-            }}
-          />
+          <Box sx={{ display: "flex", alignItems: "center", marginTop: 2 }}>
+            <TextField
+              fullWidth
+              variant="filled"
+              placeholder="Type your message..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyPress}
+              multiline
+              rows={1}
+              sx={{ backgroundColor: "#1e1e1e", borderRadius: "20px" }}
+            />
+            <Box
+              sx={{
+                marginLeft: 1,
+                backgroundColor: "#03dac6",
+                borderRadius: "50%",
+                padding: "10px",
+                cursor: "pointer",
+              }}
+              onClick={handleSend}
+            >
+              <Typography color="#fff" variant="body1">
+                ➤
+              </Typography>
+            </Box>
+          </Box>
         </Box>
       </Box>
     </ThemeProvider>
