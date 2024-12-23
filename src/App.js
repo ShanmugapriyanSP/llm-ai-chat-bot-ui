@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import ReactMarkdown from "react-markdown"; // For rendering markdown
+import ReactMarkdown from "react-markdown";
 import {
   Select,
   MenuItem,
@@ -13,6 +13,10 @@ import {
   Stack,
   Avatar,
   Divider,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemButton,
 } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 
@@ -43,13 +47,12 @@ const Message = ({ role, content }) => (
     alignItems="flex-start"
     sx={{
       marginBottom: 2,
-      maxWidth: "60%", // Limit the width of the messages
-      margin: "0 auto", // Centering the messages container
-      justifyContent: role === "user" ? "flex-end" : "flex-start", // Align user messages to the right and bot to the left
+      maxWidth: "60%",
+      margin: "0 auto",
+      justifyContent: role === "user" ? "flex-end" : "flex-start",
     }}
   >
-    {role === "user" && <Avatar sx={{ bgcolor: "#bb86fc" }} />}{" "}
-    {/* User Avatar */}
+    {role === "user" && <Avatar sx={{ bgcolor: "#bb86fc" }} />}
     <Box
       sx={{
         backgroundColor: role === "user" ? "#bb86fc" : "#03dac6",
@@ -62,37 +65,58 @@ const Message = ({ role, content }) => (
       }}
     >
       <Typography variant="body1" sx={{ fontSize: "14px" }}>
-        {/* Render Markdown content */}
         <ReactMarkdown>{content}</ReactMarkdown>
       </Typography>
     </Box>
-    {role === "assistant" && <Avatar sx={{ bgcolor: "#03dac6" }} />}{" "}
-    {/* Bot Avatar */}
+    {role === "assistant" && <Avatar sx={{ bgcolor: "#03dac6" }} />}
   </Stack>
+);
+
+const ChatHistory = ({ history, onSelect }) => (
+  <Box
+    sx={{
+      width: "20%",
+      height: "100vh",
+      backgroundColor: "#1e1e1e",
+      overflowY: "auto",
+      padding: "10px",
+    }}
+  >
+    <Typography variant="h6" color="text.primary" sx={{ marginBottom: 2 }}>
+      Chat History
+    </Typography>
+    <List>
+      {history.map((session, index) => (
+        <ListItem key={index} disablePadding>
+          <ListItemButton onClick={() => onSelect(index)}>
+            <ListItemText
+              primary={`Session ${index + 1}`}
+              secondary={session.summary || "No summary available"}
+              sx={{ color: "#fff" }}
+            />
+          </ListItemButton>
+        </ListItem>
+      ))}
+    </List>
+  </Box>
 );
 
 const App = () => {
   const [models, setModels] = useState([]);
   const [selectedModel, setSelectedModel] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [chatHistory, setChatHistory] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
 
-  const messagesEndRef = useRef(null); // Reference to scroll to the bottom
-
-  // Function to get the JWT token from localStorage (or another storage method)
-  const getToken = () => {
-    return localStorage.getItem("token"); // Assuming token is stored in localStorage
-  };
+  const getToken = () => localStorage.getItem("token");
 
   useEffect(() => {
-    const token = getToken(); // Retrieve the token
-
+    const token = getToken();
     axios
       .get("http://localhost:8080/v1/api/chat/models", {
-        headers: {
-          Authorization: `Bearer ${token}`, // Add the Bearer token to the Authorization header
-        },
+        headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
         const modelsData = response?.data?.data || [];
@@ -102,14 +126,10 @@ const App = () => {
         }));
         setModels(modelOptions);
       })
-      .catch((error) => {
-        console.error("Error fetching models:", error);
-        setModels([]); // Fallback in case of error
-      });
+      .catch(() => setModels([]));
   }, []);
 
   useEffect(() => {
-    // Scroll to the bottom when messages change
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -164,7 +184,6 @@ const App = () => {
 
   const handleSend = () => {
     if (!input.trim() || !selectedModel) return;
-
     const userMessage = { role: "user", content: input };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInput("");
@@ -183,7 +202,7 @@ const App = () => {
     };
 
     chatCompletion(payload)
-      .catch((error) => console.error(error))
+      .catch(console.error)
       .finally(() => setLoading(false));
   };
 
@@ -194,25 +213,29 @@ const App = () => {
     }
   };
 
+  const saveChatToHistory = () => {
+    setChatHistory((prevHistory) => [
+      ...prevHistory,
+      { summary: messages[0]?.content || "New Chat", messages },
+    ]);
+    setMessages([]);
+  };
+
+  const handleHistorySelect = (index) => {
+    setMessages(chatHistory[index].messages);
+  };
+
   return (
     <ThemeProvider theme={darkTheme}>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100vh",
-          width: "100vw",
-          backgroundColor: "#121212",
-          overflow: "hidden", // Prevent scroll for the whole page
-        }}
-      >
+      <Stack direction="row" sx={{ height: "100vh", width: "100vw" }}>
+        <ChatHistory history={chatHistory} onSelect={handleHistorySelect} />
         <Box
           sx={{
             flexGrow: 1,
             display: "flex",
             flexDirection: "column",
             padding: "20px",
-            overflow: "hidden", // Prevent overflow for this container
+            overflow: "hidden",
           }}
         >
           <Stack direction="row" spacing={2} alignItems="center">
@@ -251,11 +274,8 @@ const App = () => {
             spacing={2}
             sx={{
               flexGrow: 1,
-              overflowY: "auto", // Allow scrolling only here
+              overflowY: "auto",
               paddingY: 2,
-              maxWidth: "60%", // Reduced width to 60%
-              margin: "0 auto", // Centering the messages container
-              height: "calc(100vh - 200px)", // Set height for scrollable area
             }}
           >
             {messages.map((msg, index) => (
@@ -303,7 +323,7 @@ const App = () => {
             </Box>
           </Box>
         </Box>
-      </Box>
+      </Stack>
     </ThemeProvider>
   );
 };
