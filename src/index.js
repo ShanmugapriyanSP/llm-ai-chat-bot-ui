@@ -5,6 +5,7 @@ import App from "./App"; // Chat Page
 import SignIn from "./SignIn"; // Sign In Page
 import Register from "./Register"; // Register Page
 import Home from "./Home"; // Home Page
+import "./index.css";
 
 const Root = () => (
   <Router>

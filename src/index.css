@@ -1,13 +1,21 @@
+html,
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  margin: 0; /* Removes any white border around the app */
+  padding: 0; /* Ensures no padding causes overflow */
+  overflow: hidden; /* Prevents scrolling on the page */
+  width: 100%; /* Ensures full width */
+  height: 100%; /* Ensures full height */
+  background-color: #121212; /* Matches your dark theme background */
+  box-sizing: border-box; /* Standardize element sizing */
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit; /* Apply border-box to all elements */
 }

@@ -203,7 +203,7 @@ const App = () => {
           height: "100vh",
           width: "100vw",
           backgroundColor: "#121212",
-          overflowY: "hidden",
+          overflow: "hidden", // Prevent scroll for the whole page
         }}
       >
         <Box
@@ -212,6 +212,7 @@ const App = () => {
             display: "flex",
             flexDirection: "column",
             padding: "20px",
+            overflow: "hidden", // Prevent overflow for this container
           }}
         >
           <Stack direction="row" spacing={2} alignItems="center">
@@ -250,12 +251,11 @@ const App = () => {
             spacing={2}
             sx={{
               flexGrow: 1,
-              overflowY: "auto",
+              overflowY: "auto", // Allow scrolling only here
               paddingY: 2,
               maxWidth: "60%", // Reduced width to 60%
               margin: "0 auto", // Centering the messages container
               height: "calc(100vh - 200px)", // Set height for scrollable area
-              overflowY: "auto", // Make it scrollable
             }}
           >
             {messages.map((msg, index) => (
