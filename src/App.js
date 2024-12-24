@@ -19,6 +19,7 @@ import {
   ListItemButton,
 } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import apiClient from "./ApiClient";
 
 const darkTheme = createTheme({
   palette: {
@@ -111,13 +112,12 @@ const App = () => {
   const messagesEndRef = useRef(null);
 
   const getToken = () => localStorage.getItem("token");
+  const getChatId = () => localStorage.getItem("chatId");
 
   useEffect(() => {
     const token = getToken();
-    axios
-      .get("http://localhost:8080/v1/api/chat/models", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+    apiClient
+      .getModels(token)
       .then((response) => {
         const modelsData = response?.data?.data || [];
         const modelOptions = modelsData.map((model) => ({
@@ -127,6 +127,11 @@ const App = () => {
         setModels(modelOptions);
       })
       .catch(() => setModels([]));
+
+    apiClient.createNewChat(token).then((response) => {
+      const chatId = response?.data?.id;
+      localStorage.setItem("chatId", chatId);
+    });
   }, []);
 
   useEffect(() => {
@@ -159,7 +164,10 @@ const App = () => {
 
     const userMessage = {
       role: "user",
-      content: payload.messages[payload.messages.length - 1].content,
+      content:
+        payload.chatCompletionRequest.messages[
+          payload.chatCompletionRequest.messages.length - 1
+        ].content,
     };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
 
@@ -190,15 +198,18 @@ const App = () => {
     setLoading(true);
 
     const payload = {
-      model: selectedModel.value,
-      messages: [
-        { role: "system", content: "Always answer in rhymes." },
-        ...messages,
-        userMessage,
-      ],
-      temperature: 0.7,
-      maxTokens: -1,
-      stream: true,
+      chatId: getChatId(),
+      chatCompletionRequest: {
+        model: selectedModel.value,
+        messages: [
+          { role: "system", content: "Always answer in rhymes." },
+          ...messages,
+          userMessage,
+        ],
+        temperature: 0.7,
+        maxTokens: -1,
+        stream: true,
+      },
     };
 
     chatCompletion(payload)

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, TextField, Typography, Stack, Paper } from "@mui/material";
+import apiClient from "./ApiClient";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -9,32 +10,12 @@ const SignIn = () => {
 
   const handleSignIn = async () => {
     if (email && password) {
-      // Create Basic Auth header value
-      const credentials = `${email}:${password}`;
-      const base64Credentials = btoa(credentials); // Convert to Base64
-
       try {
-        // Send GET request with Basic Auth
-        const response = await fetch(
-          "http://localhost:8080/api/v1/auth/authenticate",
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Basic ${base64Credentials}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (response.ok) {
-          console.log("Signed in successfully");
-          const data = await response.json(); // Assuming response is JSON
-          // You can store JWT or other tokens from the response if needed
-          localStorage.setItem("token", data.token); // Example: Save token to localStorage
-          navigate("/chat"); // Redirect to Chat Page
-        } else {
-          alert("Invalid credentials, please try again.");
-        }
+        const response = await apiClient.signIn(email, password);
+        console.log("Signed in successfully");
+        const data = response.data;
+        localStorage.setItem("token", data.token);
+        navigate("/chat");
       } catch (error) {
         console.error("Error signing in:", error);
         alert("An error occurred, please try again.");

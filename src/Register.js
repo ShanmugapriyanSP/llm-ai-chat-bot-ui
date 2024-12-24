@@ -51,7 +51,7 @@ const Register = () => {
           const token = data.token;
 
           // Save the JWT token to local storage (or session storage)
-          localStorage.setItem("jwtToken", token);
+          localStorage.setItem("token", token);
 
           console.log("Registered successfully");
           navigate("/signin"); // Redirect to Sign In Page
