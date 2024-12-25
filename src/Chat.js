@@ -11,7 +11,6 @@ import {
   Typography,
   Stack,
   Avatar,
-  Divider,
   List,
   ListItem,
   ListItemText,
@@ -21,6 +20,7 @@ import {
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import apiClient from "./ApiClient";
 import ViewSidebarOutlinedIcon from "@mui/icons-material/ViewSidebarOutlined";
+import Slide from "@mui/material/Slide";
 
 const darkTheme = createTheme({
   palette: {
@@ -99,6 +99,7 @@ const App = () => {
   const [selectedModel, setSelectedModel] = useState(null);
   const [messages, setMessages] = useState([]);
   const [chatHistory, setChatHistory] = useState([]);
+  const [systemPrompt, setSystemPrompt] = useState("Always answer in rhymes.");
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true); // New state for sidebar visibility
@@ -193,7 +194,7 @@ const App = () => {
       chatCompletionRequest: {
         model: selectedModel.value,
         messages: [
-          { role: "system", content: "Always answer in rhymes." },
+          { role: "system", content: systemPrompt },
           ...messages,
           userMessage,
         ],
@@ -255,7 +256,7 @@ const App = () => {
             <ViewSidebarOutlinedIcon />
           </IconButton>
         </Box>
-        {isSidebarOpen && (
+        <Slide direction="right" in={isSidebarOpen} mountOnEnter unmountOnExit>
           <Box
             sx={{
               width: "300px", // Set a fixed width for the sidebar
@@ -284,8 +285,29 @@ const App = () => {
                 </ListItem>
               ))}
             </List>
+            {/* System Prompt TextField */}
+            <Box sx={{ marginTop: 2 }}>
+              <Typography variant="subtitle1" color="text.primary">
+                System Prompt
+              </Typography>
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                value={systemPrompt}
+                onChange={(e) => setSystemPrompt(e.target.value)}
+                placeholder="Enter system prompt here"
+                sx={{
+                  backgroundColor: "#2c2c2c",
+                  borderRadius: "10px",
+                  color: "#fff",
+                  width: "100%", // Ensure the width is controlled
+                }}
+              />
+            </Box>
           </Box>
-        )}
+        </Slide>
+
         <Box
           sx={{
             flexGrow: 1,
@@ -300,6 +322,7 @@ const App = () => {
             sx={{
               flexGrow: 1,
               overflowY: "auto", // Scrollbar is now on this container
+              paddingBottom: "80px", // Prevents overlap with the fixed text field
               "&::-webkit-scrollbar": {
                 width: "8px", // Set width of the scrollbar
               },
@@ -316,16 +339,14 @@ const App = () => {
               },
             }}
           >
-            {/* Inner Box with padding */}
             <Box
               sx={{
                 flexGrow: 1,
                 display: "flex",
                 flexDirection: "column",
                 paddingTop: "20px",
-                paddingBottom: "20px",
-                paddingLeft: "calc(20vw)", // Responsive padding
-                paddingRight: "calc(20vw)", // Responsive padding
+                paddingLeft: "calc(1vw)", // Responsive padding
+                paddingRight: "calc(1vw)", // Responsive padding
                 width: "100%",
               }}
             >
@@ -360,7 +381,21 @@ const App = () => {
                   </Select>
                 </FormControl>
               </Stack>
-              <Divider />
+            </Box>
+
+            {/* Inner Box with padding */}
+            <Box
+              sx={{
+                flexGrow: 1,
+                display: "flex",
+                flexDirection: "column",
+                paddingTop: "20px",
+                paddingBottom: "20px",
+                paddingLeft: "calc(20vw)", // Responsive padding
+                paddingRight: "calc(20vw)", // Responsive padding
+                width: "100%",
+              }}
+            >
               <Stack direction="column" spacing={2}>
                 {messages.map((msg, index) => (
                   <Message key={index} role={msg.role} content={msg.content} />
@@ -379,32 +414,53 @@ const App = () => {
                 )}
                 <div ref={messagesEndRef} />
               </Stack>
-              <Box sx={{ display: "flex", alignItems: "center", marginTop: 2 }}>
-                <TextField
-                  fullWidth
-                  placeholder="Message Chat AI"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  multiline
-                  rows={2}
-                  sx={{ backgroundColor: "#1e1e1e", borderRadius: "20px" }}
-                />
-                <Box
-                  sx={{
-                    marginLeft: 1,
-                    backgroundColor: "#03dac6",
-                    borderRadius: "50%",
-                    padding: "10px",
-                    cursor: "pointer",
-                  }}
-                  onClick={handleSend}
-                >
-                  <Typography color="#fff" variant="body1">
-                    ➤
-                  </Typography>
-                </Box>
-              </Box>
+            </Box>
+          </Box>
+
+          {/* Fixed TextField at the bottom */}
+          <Box
+            sx={{
+              position: "fixed",
+              bottom: 0,
+              left: isSidebarOpen ? "300px" : "0", // Adjust left offset based on sidebar visibility
+              width: isSidebarOpen ? "calc(100% - 300px)" : "100%", // Adjust width based on sidebar visibility
+              display: "flex",
+              alignItems: "center",
+              paddingTop: "20px",
+              paddingBottom: "20px",
+              paddingLeft: "calc(20vw)", // Responsive padding
+              paddingRight: "calc(20vw)", // Responsive padding
+              backgroundColor: "#121212", // Optional: Background color for the input area
+              transition: "left 0.3s, width 0.3s", // Smooth transition for sidebar toggle
+            }}
+          >
+            <TextField
+              fullWidth
+              placeholder="Message Chat AI"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyPress}
+              multiline
+              rows={2}
+              sx={{
+                backgroundColor: "#2c2c2c",
+                borderRadius: "20px",
+                color: "#fff",
+              }}
+            />
+            <Box
+              sx={{
+                marginLeft: 1,
+                backgroundColor: "#03dac6",
+                borderRadius: "50%",
+                padding: "10px",
+                cursor: "pointer",
+              }}
+              onClick={handleSend}
+            >
+              <Typography color="#fff" variant="body1">
+                ➤
+              </Typography>
             </Box>
           </Box>
         </Box>
