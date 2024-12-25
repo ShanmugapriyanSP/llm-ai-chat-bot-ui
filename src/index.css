@@ -19,3 +19,7 @@ code {
 *::after {
   box-sizing: inherit; /* Apply border-box to all elements */
 }
+
+body::-webkit-scrollbar {
+  display: none; /* Hides the scrollbar in Webkit browsers (Chrome, Safari) */
+}

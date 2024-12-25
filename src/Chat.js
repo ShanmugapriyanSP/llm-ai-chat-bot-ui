@@ -16,9 +16,11 @@ import {
   ListItem,
   ListItemText,
   ListItemButton,
+  IconButton,
 } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import apiClient from "./ApiClient";
+import ViewSidebarOutlinedIcon from "@mui/icons-material/ViewSidebarOutlined";
 
 const darkTheme = createTheme({
   palette: {
@@ -82,6 +84,12 @@ const Message = ({ role, content }) => {
           <ReactMarkdown>{content}</ReactMarkdown>
         </Typography>
       </Box>
+      {isUser && (
+        <Avatar
+          sx={{ width: 50, height: 50, marginLeft: 1 }}
+          src="/avatar-user.jpg"
+        />
+      )}
     </Stack>
   );
 };
@@ -93,6 +101,7 @@ const App = () => {
   const [chatHistory, setChatHistory] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // New state for sidebar visibility
   const messagesEndRef = useRef(null);
 
   const getToken = () => localStorage.getItem("token");
@@ -224,41 +233,59 @@ const App = () => {
     }
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen); // Toggle sidebar visibility
+  };
+
   return (
     <ThemeProvider theme={darkTheme}>
       <Stack direction="row" sx={{ height: "100vh", width: "100vw" }}>
-        <Box
-          sx={{
-            width: "300px", // Set a fixed width for the sidebar
-            display: "flex",
-            flexDirection: "column",
-            padding: "20px",
-            overflowY: "auto", // Ensure the sidebar can scroll if needed
-            backgroundColor: "#323232", // Optional: Set a background color for the sidebar
-          }}
-        >
-          {" "}
-          <Typography
-            variant="h6"
-            color="text.primary"
-            sx={{ marginBottom: 2 }}
+        {/* Sidebar */}
+        <Box>
+          <IconButton
+            onClick={toggleSidebar}
+            sx={{
+              color: "#fff",
+              padding: "6px",
+              "&:hover": {
+                backgroundColor: "#444",
+              },
+            }}
           >
-            Chat History
-          </Typography>
-          <List>
-            {chatHistory.map((session, index) => (
-              <ListItem key={index} disablePadding>
-                <ListItemButton onClick={() => handleHistorySelect(index)}>
-                  <ListItemText
-                    primary={`Session ${index + 1}`}
-                    secondary={session.summary || "No summary available"}
-                    sx={{ color: "#fff" }}
-                  />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
+            <ViewSidebarOutlinedIcon />
+          </IconButton>
         </Box>
+        {isSidebarOpen && (
+          <Box
+            sx={{
+              width: "300px", // Set a fixed width for the sidebar
+              display: "flex",
+              flexDirection: "column",
+              padding: "20px",
+              overflowY: "auto", // Ensure the sidebar can scroll if needed
+              backgroundColor: "#323232", // Optional: Set a background color for the sidebar
+            }}
+          >
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Typography variant="h6" color="text.primary">
+                Chat History
+              </Typography>
+            </Stack>
+            <List>
+              {chatHistory.map((session, index) => (
+                <ListItem key={index} disablePadding>
+                  <ListItemButton onClick={() => handleHistorySelect(index)}>
+                    <ListItemText
+                      primary={`Session ${index + 1}`}
+                      secondary={session.summary || "No summary available"}
+                      sx={{ color: "#fff" }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        )}
         <Box
           sx={{
             flexGrow: 1,
@@ -268,7 +295,7 @@ const App = () => {
             paddingBottom: "20px",
             paddingLeft: "calc(20vw)", // Responsive padding
             paddingRight: "calc(20vw)", // Responsive padding
-            width: "100%", // Ensures the width stays the same
+            width: "100%",
             overflow: "hidden",
           }}
         >
@@ -283,6 +310,7 @@ const App = () => {
             <FormControl variant="filled" sx={{ minWidth: 120 }}>
               <InputLabel>Model</InputLabel>
               <Select
+                label="Model"
                 value={selectedModel?.value || ""}
                 onChange={(e) =>
                   setSelectedModel(
@@ -310,6 +338,20 @@ const App = () => {
               flexGrow: 1,
               overflowY: "auto",
               paddingY: 2,
+              "&::-webkit-scrollbar": {
+                width: "8px", // Set width of the scrollbar
+              },
+              "&::-webkit-scrollbar-track": {
+                backgroundColor: "#2c2c2c", // Dark background for the track
+                borderRadius: "10px",
+              },
+              "&::-webkit-scrollbar-thumb": {
+                backgroundColor: "#555", // Lighter color for the thumb
+                borderRadius: "10px",
+              },
+              "&::-webkit-scrollbar-thumb:hover": {
+                backgroundColor: "#888", // Hover effect for the thumb
+              },
             }}
           >
             {messages.map((msg, index) => (
