@@ -9,7 +9,12 @@ class ApiClient {
     try {
       const response = await axios.post(
         `${this.baseURL}/auth/register`,
-        payload
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
       return response;
     } catch (error) {
@@ -66,7 +71,48 @@ class ApiClient {
       throw error;
     }
   }
+
+  async chatCompletion(payload, jwtToken) {
+    try {
+      const response = await fetch(
+        "http://localhost:8080/api/v1/chat/completion",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwtToken}`, // Pass the Bearer token in the Authorization header
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Request is not successful");
+      }
+      if (!response.body) {
+        throw new Error("ReadableStream not supported or no response body");
+      }
+      return response;
+    } catch (error) {
+      console.error(`Error in chat completion request`, error);
+      throw error;
+    }
+  }
+
+  async getChatHistory(jwtToken) {
+    try {
+      const response = await axios.get(`${this.baseURL}/chat/history`, {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+        },
+      });
+      return response;
+    } catch (error) {
+      console.error(`Error in getting the chat history`, error);
+      throw error;
+    }
+  }
 }
 
-const apiClient = new ApiClient("http://localhost:8080/v1/api");
+const apiClient = new ApiClient("http://localhost:8080/api/v1");
 export default apiClient;

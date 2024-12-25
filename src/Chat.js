@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
 import ReactMarkdown from "react-markdown";
 import {
   Select,
@@ -141,21 +140,7 @@ const App = () => {
   async function chatCompletion(payload) {
     const token = getToken(); // Retrieve the token
 
-    const response = await fetch(
-      "http://localhost:8080/v1/api/chat/completion",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Pass the Bearer token in the Authorization header
-        },
-        body: JSON.stringify(payload),
-      }
-    );
-
-    if (!response.body) {
-      throw new Error("ReadableStream not supported or no response body");
-    }
+    const response = await apiClient.chatCompletion(payload, token);
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();

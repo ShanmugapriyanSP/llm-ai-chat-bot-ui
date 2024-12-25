@@ -8,6 +8,7 @@ import {
   Stack,
   Paper,
 } from "@mui/material";
+import apiClient from "./ApiClient";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -34,31 +35,14 @@ const Register = () => {
 
       try {
         // Send POST request to register the user
-        const response = await fetch(
-          "http://localhost:8080/api/v1/auth/register",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(requestBody),
-          }
-        );
+        const response = await apiClient.register(requestBody);
+        const token = response?.data?.token;
 
-        if (response.ok) {
-          // Parse the JWT token from the response
-          const data = await response.json();
-          const token = data.token;
+        // Save the JWT token to local storage (or session storage)
+        localStorage.setItem("token", token);
 
-          // Save the JWT token to local storage (or session storage)
-          localStorage.setItem("token", token);
-
-          console.log("Registered successfully");
-          navigate("/signin"); // Redirect to Sign In Page
-        } else {
-          const errorData = await response.json();
-          alert(`Registration failed: ${errorData.message || "Unknown error"}`);
-        }
+        console.log("Registered successfully");
+        navigate("/signin"); // Redirect to Sign In Page
       } catch (error) {
         console.error("Error during registration:", error);
         alert("An error occurred while registering.");
