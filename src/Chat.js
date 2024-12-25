@@ -291,53 +291,15 @@ const App = () => {
             flexGrow: 1,
             display: "flex",
             flexDirection: "column",
-            paddingTop: "20px",
-            paddingBottom: "20px",
-            paddingLeft: "calc(20vw)", // Responsive padding
-            paddingRight: "calc(20vw)", // Responsive padding
             width: "100%",
-            overflow: "hidden",
+            overflow: "hidden", // Prevents outer container from overflowing
           }}
         >
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Typography
-              variant="h6"
-              color="text.primary"
-              sx={{ fontWeight: "bold" }}
-            >
-              Chat AI
-            </Typography>
-            <FormControl variant="filled" sx={{ minWidth: 120 }}>
-              <InputLabel>Model</InputLabel>
-              <Select
-                label="Model"
-                value={selectedModel?.value || ""}
-                onChange={(e) =>
-                  setSelectedModel(
-                    models.find((model) => model.value === e.target.value)
-                  )
-                }
-              >
-                {models.length > 0 ? (
-                  models.map((model) => (
-                    <MenuItem key={model.value} value={model.value}>
-                      {model.label}
-                    </MenuItem>
-                  ))
-                ) : (
-                  <MenuItem disabled>No models available</MenuItem>
-                )}
-              </Select>
-            </FormControl>
-          </Stack>
-          <Divider />
-          <Stack
-            direction="column"
-            spacing={2}
+          {/* Scrollable container */}
+          <Box
             sx={{
               flexGrow: 1,
-              overflowY: "auto",
-              paddingY: 2,
+              overflowY: "auto", // Scrollbar is now on this container
               "&::-webkit-scrollbar": {
                 width: "8px", // Set width of the scrollbar
               },
@@ -354,47 +316,95 @@ const App = () => {
               },
             }}
           >
-            {messages.map((msg, index) => (
-              <Message key={index} role={msg.role} content={msg.content} />
-            ))}
-            {loading && (
-              <Stack
-                direction="row"
-                justifyContent="center"
-                alignItems="center"
-              >
-                <CircularProgress size={20} color="secondary" />
-                <Typography variant="body2" color="text.secondary">
-                  Assistant is typing...
-                </Typography>
-              </Stack>
-            )}
-            <div ref={messagesEndRef} />
-          </Stack>
-          <Box sx={{ display: "flex", alignItems: "center", marginTop: 2 }}>
-            <TextField
-              fullWidth
-              placeholder="Message Chat AI"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyPress}
-              multiline
-              rows={2}
-              sx={{ backgroundColor: "#1e1e1e", borderRadius: "20px" }}
-            />
+            {/* Inner Box with padding */}
             <Box
               sx={{
-                marginLeft: 1,
-                backgroundColor: "#03dac6",
-                borderRadius: "50%",
-                padding: "10px",
-                cursor: "pointer",
+                flexGrow: 1,
+                display: "flex",
+                flexDirection: "column",
+                paddingTop: "20px",
+                paddingBottom: "20px",
+                paddingLeft: "calc(20vw)", // Responsive padding
+                paddingRight: "calc(20vw)", // Responsive padding
+                width: "100%",
               }}
-              onClick={handleSend}
             >
-              <Typography color="#fff" variant="body1">
-                ➤
-              </Typography>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Typography
+                  variant="h6"
+                  color="text.primary"
+                  sx={{ fontWeight: "bold" }}
+                >
+                  Chat AI
+                </Typography>
+                <FormControl variant="filled" sx={{ minWidth: 120 }}>
+                  <InputLabel>Model</InputLabel>
+                  <Select
+                    label="Model"
+                    value={selectedModel?.value || ""}
+                    onChange={(e) =>
+                      setSelectedModel(
+                        models.find((model) => model.value === e.target.value)
+                      )
+                    }
+                  >
+                    {models.length > 0 ? (
+                      models.map((model) => (
+                        <MenuItem key={model.value} value={model.value}>
+                          {model.label}
+                        </MenuItem>
+                      ))
+                    ) : (
+                      <MenuItem disabled>No models available</MenuItem>
+                    )}
+                  </Select>
+                </FormControl>
+              </Stack>
+              <Divider />
+              <Stack direction="column" spacing={2}>
+                {messages.map((msg, index) => (
+                  <Message key={index} role={msg.role} content={msg.content} />
+                ))}
+                {loading && (
+                  <Stack
+                    direction="row"
+                    justifyContent="center"
+                    alignItems="center"
+                  >
+                    <CircularProgress size={20} color="secondary" />
+                    <Typography variant="body2" color="text.secondary">
+                      Assistant is typing...
+                    </Typography>
+                  </Stack>
+                )}
+                <div ref={messagesEndRef} />
+              </Stack>
+              <Box sx={{ display: "flex", alignItems: "center", marginTop: 2 }}>
+                <TextField
+                  fullWidth
+                  placeholder="Message Chat AI"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  multiline
+                  rows={2}
+                  sx={{ backgroundColor: "#1e1e1e", borderRadius: "20px" }}
+                />
+                <Box
+                  sx={{
+                    marginLeft: 1,
+                    backgroundColor: "#03dac6",
+                    borderRadius: "50%",
+                    padding: "10px",
+                    cursor: "pointer",
+                  }}
+                  onClick={handleSend}
+                >
+                  <Typography color="#fff" variant="body1">
+                    ➤
+                  </Typography>
+                </Box>
+              </Box>
             </Box>
           </Box>
         </Box>
