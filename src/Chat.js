@@ -40,66 +40,51 @@ const darkTheme = createTheme({
   },
 });
 
-const Message = ({ role, content }) => (
-  <Stack
-    direction="row"
-    spacing={2}
-    alignItems="flex-start"
-    sx={{
-      marginBottom: 2,
-      maxWidth: "60%",
-      margin: "0 auto",
-      justifyContent: role === "user" ? "flex-end" : "flex-start",
-    }}
-  >
-    {role === "user" && <Avatar sx={{ bgcolor: "#bb86fc" }} />}
-    <Box
+const Message = ({ role, content }) => {
+  const isUser = role === "user";
+  const backgroundColor = "#323232";
+  const borderRadius = "20px";
+  const boxShadow = 0;
+  const textAlign = isUser ? "left" : "left";
+  const maxWidth = isUser ? "80%" : "60%"; // Adjust maxWidth for assistant messages
+
+  return (
+    <Stack
+      direction="row"
+      spacing={0}
+      alignItems="flex-start"
       sx={{
-        backgroundColor: role === "user" ? "#bb86fc" : "#03dac6",
-        color: "#fff",
-        borderRadius: "15px",
-        padding: "12px",
-        boxShadow: 2,
-        wordBreak: "break-word",
-        maxWidth: "100%",
+        marginBottom: 2,
+        maxWidth: "100%", // Ensure the message width adjusts dynamically
+        justifyContent: isUser ? "flex-end" : "justify", // Align user messages right and assistant messages center
       }}
     >
-      <Typography variant="body1" sx={{ fontSize: "14px" }}>
-        <ReactMarkdown>{content}</ReactMarkdown>
-      </Typography>
-    </Box>
-    {role === "assistant" && <Avatar sx={{ bgcolor: "#03dac6" }} />}
-  </Stack>
-);
-
-const ChatHistory = ({ history, onSelect }) => (
-  <Box
-    sx={{
-      width: "20%",
-      height: "100vh",
-      backgroundColor: "#1e1e1e",
-      overflowY: "auto",
-      padding: "10px",
-    }}
-  >
-    <Typography variant="h6" color="text.primary" sx={{ marginBottom: 2 }}>
-      Chat History
-    </Typography>
-    <List>
-      {history.map((session, index) => (
-        <ListItem key={index} disablePadding>
-          <ListItemButton onClick={() => onSelect(index)}>
-            <ListItemText
-              primary={`Session ${index + 1}`}
-              secondary={session.summary || "No summary available"}
-              sx={{ color: "#fff" }}
-            />
-          </ListItemButton>
-        </ListItem>
-      ))}
-    </List>
-  </Box>
-);
+      {!isUser && (
+        <Avatar
+          sx={{ width: 50, height: 50, marginRight: 1 }}
+          src="/avatar-bot.jpg"
+        />
+      )}
+      <Box
+        sx={{
+          backgroundColor,
+          color: "#fff",
+          borderRadius,
+          padding: "0px 12px 0px 12px", // Adjust padding to reduce space around text
+          boxShadow,
+          wordBreak: "break-word",
+          maxWidth, // Set dynamic maxWidth based on the role
+          display: "inline-block", // Ensure the box stays inline
+          textAlign, // Center-align assistant's message and left-align user message
+        }}
+      >
+        <Typography variant="body2" sx={{ fontSize: "16px" }}>
+          <ReactMarkdown>{content}</ReactMarkdown>
+        </Typography>
+      </Box>
+    </Stack>
+  );
+};
 
 const App = () => {
   const [models, setModels] = useState([]);
@@ -115,6 +100,7 @@ const App = () => {
 
   useEffect(() => {
     const token = getToken();
+    // Fetch models
     apiClient
       .getModels(token)
       .then((response) => {
@@ -127,10 +113,20 @@ const App = () => {
       })
       .catch(() => setModels([]));
 
+    // Create a new chat
     apiClient.createNewChat(token).then((response) => {
       const chatId = response?.data?.id;
       localStorage.setItem("chatId", chatId);
     });
+
+    // Fetch chat history and set the chatHistory state
+    apiClient
+      .getChatHistory(token)
+      .then((response) => {
+        const historyData = response?.data || [];
+        setChatHistory(historyData); // Set chat history here
+      })
+      .catch(() => setChatHistory([]));
   }, []);
 
   useEffect(() => {
@@ -173,6 +169,7 @@ const App = () => {
         done = true; // End the loop on error
       }
     }
+    console.log("Messages - ", messages);
   }
 
   const handleSend = () => {
@@ -209,28 +206,69 @@ const App = () => {
     }
   };
 
-  const saveChatToHistory = () => {
-    setChatHistory((prevHistory) => [
-      ...prevHistory,
-      { summary: messages[0]?.content || "New Chat", messages },
-    ]);
-    setMessages([]);
-  };
-
   const handleHistorySelect = (index) => {
-    setMessages(chatHistory[index].messages);
+    // Populate the messages for the selected session
+    const selectedSession = chatHistory[index];
+    const messageList = [];
+    if (selectedSession && selectedSession.messages) {
+      selectedSession.messages.forEach((item, index) => {
+        messageList.push({
+          content: item.content,
+          role: item.type.toLowerCase(),
+        });
+      });
+      setMessages(messageList);
+      localStorage.setItem("chatId", selectedSession.id);
+    } else {
+      setMessages([]); // In case there are no messages in the session
+    }
   };
 
   return (
     <ThemeProvider theme={darkTheme}>
       <Stack direction="row" sx={{ height: "100vh", width: "100vw" }}>
-        <ChatHistory history={chatHistory} onSelect={handleHistorySelect} />
+        <Box
+          sx={{
+            width: "300px", // Set a fixed width for the sidebar
+            display: "flex",
+            flexDirection: "column",
+            padding: "20px",
+            overflowY: "auto", // Ensure the sidebar can scroll if needed
+            backgroundColor: "#323232", // Optional: Set a background color for the sidebar
+          }}
+        >
+          {" "}
+          <Typography
+            variant="h6"
+            color="text.primary"
+            sx={{ marginBottom: 2 }}
+          >
+            Chat History
+          </Typography>
+          <List>
+            {chatHistory.map((session, index) => (
+              <ListItem key={index} disablePadding>
+                <ListItemButton onClick={() => handleHistorySelect(index)}>
+                  <ListItemText
+                    primary={`Session ${index + 1}`}
+                    secondary={session.summary || "No summary available"}
+                    sx={{ color: "#fff" }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Box>
         <Box
           sx={{
             flexGrow: 1,
             display: "flex",
             flexDirection: "column",
-            padding: "20px",
+            paddingTop: "20px",
+            paddingBottom: "20px",
+            paddingLeft: "calc(20vw)", // Responsive padding
+            paddingRight: "calc(20vw)", // Responsive padding
+            width: "100%", // Ensures the width stays the same
             overflow: "hidden",
           }}
         >
@@ -294,13 +332,12 @@ const App = () => {
           <Box sx={{ display: "flex", alignItems: "center", marginTop: 2 }}>
             <TextField
               fullWidth
-              variant="filled"
-              placeholder="Type your message..."
+              placeholder="Message Chat AI"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
               multiline
-              rows={1}
+              rows={2}
               sx={{ backgroundColor: "#1e1e1e", borderRadius: "20px" }}
             />
             <Box
