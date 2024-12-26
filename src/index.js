@@ -1,9 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Chat from "./Chat"; // Chat Page
-import SignIn from "./SignIn"; // Sign In Page
-import Register from "./Register"; // Register Page
+import SignIn from "./components/user/SignIn";
+import Register from "./components/user/Register";
+import Chat from "./components/chat/Chat";
 import Home from "./Home"; // Home Page
 import "./index.css";
 

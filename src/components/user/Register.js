@@ -1,14 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  Stack,
-  Paper,
-} from "@mui/material";
-import apiClient from "./ApiClient";
+import { Button, TextField, Typography, Stack, Paper } from "@mui/material";
+import apiClient from "../api/ApiClient";
 
 const Register = () => {
   const [email, setEmail] = useState("");
