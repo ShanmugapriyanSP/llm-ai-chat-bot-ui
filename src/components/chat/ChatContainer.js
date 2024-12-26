@@ -9,18 +9,12 @@ import {
   Box,
   Typography,
   Stack,
-  InputAdornment,
-  IconButton,
 } from "@mui/material";
 import apiClient from "../api/ApiClient";
 import Message from "./Message";
-import AttachFileIcon from "@mui/icons-material/AttachFile";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import SystemPrompt from "./SystemPrompt";
 
 const ChatContainer = ({ messages, loading, handleSend, isSidebarOpen }) => {
-  console.log("isSideBarOpen in Chat container - ", isSidebarOpen);
-
   const getToken = () => localStorage.getItem("token");
   const [selectedModel, setSelectedModel] = useState(null);
   const [models, setModels] = useState([]);
@@ -243,21 +237,6 @@ const ChatContainer = ({ messages, loading, handleSend, isSidebarOpen }) => {
               }}
             />
           </Box>
-
-          {/* <Box
-            sx={{
-              marginLeft: 1,
-              backgroundColor: "#03dac6",
-              borderRadius: "50%",
-              padding: "10px",
-              cursor: "pointer",
-            }}
-            onClick={handleSend}
-          >
-            <Typography color="#fff" variant="body1">
-              ➤
-            </Typography>
-          </Box> */}
         </Box>
       </Box>
     </>
